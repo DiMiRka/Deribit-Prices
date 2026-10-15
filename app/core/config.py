@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     tickers: Annotated[tuple[str, ...], NoDecode] = Field(
         default=("btc_usd", "eth_usd"), min_length=1
     )
-    collect_interval_seconds: float = Field(default=60, gt=0)
+    collect_schedule: str = "* * * * *"
 
     log_level: LogLevel = "INFO"
 

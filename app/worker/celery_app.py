@@ -1,10 +1,13 @@
 from typing import Any
 
 from celery import Celery
+from celery.schedules import crontab
 from celery.signals import setup_logging as celery_setup_logging
 
 from app.core.config import Settings
 from app.core.logging import setup_logging
+
+TASK_EXPIRES_SECONDS = 60
 
 
 def create_celery_app(settings: Settings) -> Celery:
@@ -21,8 +24,8 @@ def create_celery_app(settings: Settings) -> Celery:
         beat_schedule={
             "collect-index-prices": {
                 "task": "collect_prices",
-                "schedule": settings.collect_interval_seconds,
-                "options": {"expires": settings.collect_interval_seconds},
+                "schedule": crontab.from_string(settings.collect_schedule),
+                "options": {"expires": TASK_EXPIRES_SECONDS},
             },
         },
     )
