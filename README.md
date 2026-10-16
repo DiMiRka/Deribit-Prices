@@ -52,7 +52,7 @@ tests/              # unit тесты (без внешних сервисов)
 ## Запуск в Docker
 
 ```bash
-git clone <repo-url> deribit-prices
+git clone https://github.com/DiMiRka/Deribit-Prices.git deribit-prices
 cd deribit-prices
 cp .env.example .env
 docker compose up --build -d
