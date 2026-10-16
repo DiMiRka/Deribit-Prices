@@ -1,5 +1,9 @@
 # Deribit Prices
 
+[![CI/CD](https://github.com/DiMiRka/Deribit-Prices/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/DiMiRka/Deribit-Prices/actions/workflows/ci-cd.yml)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-async-009688)
+
 Сервис раз в минуту забирает с криптобиржи [Deribit](https://docs.deribit.com/) индексные цены, сохраняет их в PostgreSQL (тикер, цена, время в UNIX timestamp) и отдаёт сохранённые данные через HTTP API на FastAPI
 
 **Стек:** Python 3.12, FastAPI, aiohttp, SQLAlchemy 2 (async) + asyncpg, Alembic, Celery + Redis, PostgreSQL 17, pydantic-settings, loguru, pytest, ruff, mypy (strict), Docker Compose
@@ -229,7 +233,7 @@ mypy app tests
 
 Тесты не требуют БД, Redis или доступ в интернет
 
-Те же проверки автоматически запускаются в GitLab CI на каждый push (задачи `ruff`, `mypy` и `pytest` выполняются параллельно в образе `python:3.12-slim`)
+Те же проверки автоматически запускаются на каждый push: в GitHub Actions (линтеры, типы, проверка миграций на PostgreSQL, тесты, сборка и smoke-тест Docker-образа) и в GitLab CI (`ruff`, `mypy` и `pytest` параллельно в образе `python:3.12-slim`)
 
 | Файл | Что проверяет                                                                                                                                                                                                                                                                     |
 |---|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -347,4 +351,4 @@ Celery по умолчанию перенастраивает логирован
 - `mypy --strict` (с плагином pydantic и типами `celery-types`)
 - `ruff`: стиль, сортировка импортов, типичные баги (`B`), async-ошибки (`ASYNC`), нейминг (`N`)
 - тесты `pytest` основных компонентов
-- GitLab CI (все проверки на каждый push)
+- CI в GitHub Actions и GitLab CI (все проверки на каждый push)
