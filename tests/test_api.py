@@ -13,6 +13,12 @@ from app.services.exceptions import PriceNotFoundError
 from app.services.price import PriceService
 
 BTC_PRICE = Price(ticker="btc_usd", price=Decimal("81213.58"), timestamp=1792058071)
+BTC_PRICE_JSON = {
+    "ticker": "btc_usd",
+    "price": "81213.58",
+    "timestamp": 1792058071,
+    "datetime": "2026-10-15T09:54:31Z",
+}
 
 
 @pytest.fixture
@@ -47,7 +53,7 @@ def test_latest_price_returned(client: TestClient, service: AsyncMock) -> None:
     response = client.get("/prices/latest", params={"ticker": "btc_usd"})
 
     assert response.status_code == 200
-    assert response.json() == {"ticker": "btc_usd", "price": "81213.58", "timestamp": 1792058071}
+    assert response.json() == BTC_PRICE_JSON
 
 
 def test_latest_price_not_found(client: TestClient, service: AsyncMock) -> None:
@@ -63,13 +69,18 @@ def test_prices_by_date_passes_filter(client: TestClient, service: AsyncMock) ->
 
     response = client.get(
         "/prices/by-date",
-        params={"ticker": "BTC_USD", "date_from": 100, "date_to": 200, "limit": 10},
+        params={
+            "ticker": "BTC_USD",
+            "date_from": "1970-01-02",
+            "date_to": "1970-01-02 12:30",
+            "limit": 10,
+        },
     )
 
     assert response.status_code == 200
     assert len(response.json()) == 1
     service.get_by_date.assert_awaited_once_with(
-        "btc_usd", DateRange(date_from=100, date_to=200), Pagination(limit=10, offset=0)
+        "btc_usd", DateRange(date_from=86400, date_to=131400), Pagination(limit=10, offset=0)
     )
 
 
@@ -88,5 +99,5 @@ def test_latest_prices_for_all_tickers(client: TestClient, service: AsyncMock) -
     response = client.get("/prices")
 
     assert response.status_code == 200
-    assert response.json() == [{"ticker": "btc_usd", "price": "81213.58", "timestamp": 1792058071}]
+    assert response.json() == [BTC_PRICE_JSON]
     service.get_latest_for_tickers.assert_awaited_once_with(("btc_usd", "eth_usd"))

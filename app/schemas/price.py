@@ -1,9 +1,10 @@
+import datetime as dt
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 
 
 class Ticker(StrEnum):
@@ -24,6 +25,11 @@ class PriceRead(BaseModel):
     ticker: str
     price: Decimal
     timestamp: int
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def datetime(self) -> dt.datetime:
+        return dt.datetime.fromtimestamp(self.timestamp, tz=dt.UTC)
 
 
 @dataclass(frozen=True, slots=True)

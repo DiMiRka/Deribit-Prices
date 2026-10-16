@@ -1,4 +1,6 @@
-from collections.abc import AsyncIterator
+import math
+from collections.abc import AsyncIterator, Callable
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends, Query, Request
@@ -12,6 +14,9 @@ from app.services.price import PriceService
 
 DEFAULT_LIMIT = 100
 MAX_LIMIT = 1000
+DATE_DESCRIPTION = (
+    "Дата 2026-10-16 (с 00:00) или дата и время 2026-10-16 12:30, время в UTC, граница включительно"
+)
 
 
 def get_pagination(
@@ -21,22 +26,34 @@ def get_pagination(
     return Pagination(limit=limit, offset=offset)
 
 
+def _validation_error(field: str, message: str, value: object) -> RequestValidationError:
+    return RequestValidationError(
+        [{"type": "value_error", "loc": ("query", field), "msg": message, "input": value}]
+    )
+
+
+def _to_unix(field: str, value: datetime | None, rounding: Callable[[float], int]) -> int | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    timestamp = rounding(value.timestamp())
+    if timestamp < 0:
+        raise _validation_error(field, "Date must not be earlier than 1970-01-01T00:00:00Z", value)
+    return timestamp
+
+
 def get_date_range(
-    date_from: Annotated[int | None, Query(ge=0, description="UNIX timestamp, inclusive")] = None,
-    date_to: Annotated[int | None, Query(ge=0, description="UNIX timestamp, inclusive")] = None,
+    date_from: Annotated[datetime | None, Query(description=DATE_DESCRIPTION)] = None,
+    date_to: Annotated[datetime | None, Query(description=DATE_DESCRIPTION)] = None,
 ) -> DateRange:
-    if date_from is not None and date_to is not None and date_from > date_to:
-        raise RequestValidationError(
-            [
-                {
-                    "type": "value_error",
-                    "loc": ("query", "date_from"),
-                    "msg": "date_from must be less than or equal to date_to",
-                    "input": date_from,
-                }
-            ]
+    from_timestamp = _to_unix("date_from", date_from, math.ceil)
+    to_timestamp = _to_unix("date_to", date_to, math.floor)
+    if from_timestamp is not None and to_timestamp is not None and from_timestamp > to_timestamp:
+        raise _validation_error(
+            "date_from", "date_from must be less than or equal to date_to", date_from
         )
-    return DateRange(date_from=date_from, date_to=date_to)
+    return DateRange(date_from=from_timestamp, date_to=to_timestamp)
 
 
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
