@@ -1,8 +1,8 @@
 from functools import lru_cache
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic import Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
 type LogLevel = Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
@@ -22,19 +22,9 @@ class Settings(BaseSettings):
     deribit_base_url: str = "https://www.deribit.com/api/v2"
     deribit_timeout_seconds: float = Field(default=10, gt=0)
 
-    tickers: Annotated[tuple[str, ...], NoDecode] = Field(
-        default=("btc_usd", "eth_usd"), min_length=1
-    )
     collect_schedule: str = "* * * * *"
 
     log_level: LogLevel = "INFO"
-
-    @field_validator("tickers", mode="before")
-    @classmethod
-    def split_tickers(cls, value: object) -> object:
-        if isinstance(value, str):
-            return tuple(item.strip().lower() for item in value.split(",") if item.strip())
-        return value
 
     @property
     def database_url(self) -> URL:

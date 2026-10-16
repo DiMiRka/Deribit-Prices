@@ -1,7 +1,21 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict
+
+
+class Ticker(StrEnum):
+    BTC_USD = "btc_usd"
+    ETH_USD = "eth_usd"
+
+    @classmethod
+    def _missing_(cls, value: object) -> Self | None:
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            return next((member for member in cls if member.value == normalized), None)
+        return None
 
 
 class PriceRead(BaseModel):

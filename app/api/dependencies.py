@@ -5,33 +5,13 @@ from fastapi import Depends, Query, Request
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import Settings, get_settings
 from app.db.session import Database
 from app.repositories.price import PriceRepository
-from app.schemas.price import DateRange, Pagination
+from app.schemas.price import DateRange, Pagination, Ticker
 from app.services.price import PriceService
 
 DEFAULT_LIMIT = 100
 MAX_LIMIT = 1000
-
-
-def get_ticker(
-    ticker: Annotated[str, Query(description="Index name")],
-    settings: Annotated[Settings, Depends(get_settings)],
-) -> str:
-    normalized = ticker.strip().lower()
-    if normalized not in settings.tickers:
-        raise RequestValidationError(
-            [
-                {
-                    "type": "value_error",
-                    "loc": ("query", "ticker"),
-                    "msg": f"Unknown ticker, expected one of: {', '.join(settings.tickers)}",
-                    "input": ticker,
-                }
-            ]
-        )
-    return normalized
 
 
 def get_pagination(
@@ -69,8 +49,7 @@ def get_price_service(session: Annotated[AsyncSession, Depends(get_session)]) ->
     return PriceService(PriceRepository(session))
 
 
-SettingsDep = Annotated[Settings, Depends(get_settings)]
-TickerDep = Annotated[str, Depends(get_ticker)]
+TickerDep = Annotated[Ticker, Query(description="Deribit index name")]
 PaginationDep = Annotated[Pagination, Depends(get_pagination)]
 DateRangeDep = Annotated[DateRange, Depends(get_date_range)]
 PriceServiceDep = Annotated[PriceService, Depends(get_price_service)]

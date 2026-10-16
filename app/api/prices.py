@@ -6,19 +6,18 @@ from app.api.dependencies import (
     DateRangeDep,
     PaginationDep,
     PriceServiceDep,
-    SettingsDep,
     TickerDep,
 )
 from app.db.models import Price
-from app.schemas.price import PriceRead
+from app.schemas.price import PriceRead, Ticker
 from app.services.exceptions import PriceNotFoundError
 
 router = APIRouter(prefix="/prices", tags=["prices"])
 
 
-@router.get("", response_model=list[PriceRead], summary="Актуальная цена для каждого настроенного тикера")
-async def get_latest_prices(settings: SettingsDep, service: PriceServiceDep) -> Sequence[Price]:
-    return await service.get_latest_for_tickers(settings.tickers)
+@router.get("", response_model=list[PriceRead], summary="Актуальная цена для каждого тикера")
+async def get_latest_prices(service: PriceServiceDep) -> Sequence[Price]:
+    return await service.get_latest_for_tickers(tuple(Ticker))
 
 
 @router.get("/history", response_model=list[PriceRead], summary="Все сохранённые цены для тикера")

@@ -82,7 +82,7 @@ def test_prices_by_date_rejects_inverted_range(client: TestClient, service: Asyn
     service.get_by_date.assert_not_awaited()
 
 
-def test_latest_prices_for_configured_tickers(client: TestClient, service: AsyncMock) -> None:
+def test_latest_prices_for_all_tickers(client: TestClient, service: AsyncMock) -> None:
     service.get_latest_for_tickers.return_value = [BTC_PRICE]
 
     response = client.get("/prices")

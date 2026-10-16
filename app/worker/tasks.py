@@ -7,6 +7,7 @@ from app.clients.deribit import DeribitClient
 from app.core.config import Settings, get_settings
 from app.db.session import Database
 from app.repositories.price import PriceRepository
+from app.schemas.price import Ticker
 from app.services.collector import PriceCollector
 
 
@@ -17,7 +18,7 @@ async def run_collection(settings: Settings) -> int:
             client = DeribitClient(
                 http_session, settings.deribit_base_url, settings.deribit_timeout_seconds
             )
-            collector = PriceCollector(client, PriceRepository(db_session), settings.tickers)
+            collector = PriceCollector(client, PriceRepository(db_session), tuple(Ticker))
             collected = await collector.collect()
     finally:
         await database.dispose()
