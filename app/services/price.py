@@ -31,3 +31,6 @@ class PriceService:
             date_from=date_range.date_from,
             date_to=date_range.date_to,
         )
+
+    async def get_latest_for_tickers(self, tickers: Sequence[str]) -> Sequence[Price]:
+        return await self._repository.get_latest_many(tickers)

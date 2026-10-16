@@ -2,7 +2,13 @@ from collections.abc import Sequence
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.dependencies import DateRangeDep, PaginationDep, PriceServiceDep, TickerDep
+from app.api.dependencies import (
+    DateRangeDep,
+    PaginationDep,
+    PriceServiceDep,
+    SettingsDep,
+    TickerDep,
+)
 from app.db.models import Price
 from app.schemas.price import PriceRead
 from app.services.exceptions import PriceNotFoundError
@@ -10,14 +16,19 @@ from app.services.exceptions import PriceNotFoundError
 router = APIRouter(prefix="/prices", tags=["prices"])
 
 
-@router.get("", response_model=list[PriceRead], summary="All stored prices for a ticker")
-async def get_all_prices(
+@router.get("", response_model=list[PriceRead], summary="Актуальная цена для каждого настроенного тикера")
+async def get_latest_prices(settings: SettingsDep, service: PriceServiceDep) -> Sequence[Price]:
+    return await service.get_latest_for_tickers(settings.tickers)
+
+
+@router.get("/history", response_model=list[PriceRead], summary="Все сохранённые цены для тикера")
+async def get_price_history(
     ticker: TickerDep, pagination: PaginationDep, service: PriceServiceDep
 ) -> Sequence[Price]:
     return await service.get_all(ticker, pagination)
 
 
-@router.get("/latest", response_model=PriceRead, summary="Latest price for a ticker")
+@router.get("/latest", response_model=PriceRead, summary="Последняя цена по тикеру")
 async def get_latest_price(ticker: TickerDep, service: PriceServiceDep) -> Price:
     try:
         return await service.get_latest(ticker)
@@ -25,7 +36,7 @@ async def get_latest_price(ticker: TickerDep, service: PriceServiceDep) -> Price
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
-@router.get("/by-date", response_model=list[PriceRead], summary="Prices for a ticker by date")
+@router.get("/by-date", response_model=list[PriceRead], summary="Цены для тикера по датам")
 async def get_prices_by_date(
     ticker: TickerDep,
     date_range: DateRangeDep,

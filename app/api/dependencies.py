@@ -69,6 +69,7 @@ def get_price_service(session: Annotated[AsyncSession, Depends(get_session)]) ->
     return PriceService(PriceRepository(session))
 
 
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 TickerDep = Annotated[str, Depends(get_ticker)]
 PaginationDep = Annotated[Pagination, Depends(get_pagination)]
 DateRangeDep = Annotated[DateRange, Depends(get_date_range)]
