@@ -1,0 +1,34 @@
+stages:
+  - check
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+default:
+  image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - requirements.txt
+        - requirements-dev.txt
+    paths:
+      - .cache/pip
+  before_script:
+    - pip install -r requirements-dev.txt
+
+ruff:
+  stage: check
+  script:
+    - ruff check .
+    - ruff format --check .
+
+mypy:
+  stage: check
+  script:
+    - mypy app tests
+
+pytest:
+  stage: check
+  script:
+    - pytest
